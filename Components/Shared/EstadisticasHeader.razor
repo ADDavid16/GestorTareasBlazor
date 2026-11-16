@@ -3,11 +3,11 @@
         <div class="col-4">
             <span class="d-block fs-3 fw-bold">@Total</span>
             <small class="text-uppercase opacity-75">Totales</small>
-        </div>
+        </div> 
         <div class="col-4 border-start border-end border-light border-opacity-25">
             <span class="d-block fs-3 fw-bold text-warning">@Pendientes</span>
             <small class="text-uppercase opacity-75">Pendientes</small>
-        </div>
+        </div> 
         <div class="col-4">
             <span class="d-block fs-3 fw-bold text-info">@Completadas</span>
             <small class="text-uppercase opacity-75">Completadas</small>
@@ -16,7 +16,8 @@
 </section>
 
 @code {
+    //
     [Parameter] public int Total { get; set; }
-    [Parameter] public int Pendientes { get; set; }
+    [Parameter] public int Pendientes { get; set; } 
     [Parameter] public int Completadas { get; set; }
-}
+} 
