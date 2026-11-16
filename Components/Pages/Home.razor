@@ -1,0 +1,122 @@
+﻿@page "/"
+@implements IDisposable
+@using GestorTareasBlazor.Models
+@using GestorTareasBlazor.Services
+@using GestorTareasBlazor.Components.Shared
+@inject TareaStateService TareaService
+@inject NavigationManager Nav
+@inject IJSRuntime JS
+
+<PageTitle>Gestor de Tareas</PageTitle>
+
+<EstadisticasHeader Total="@todasLasTareas.Count"
+                    Pendientes="@todasLasTareas.Count(t => !t.Completada)"
+                    Completadas="@todasLasTareas.Count(t => t.Completada)" />
+
+<AlertaNotificacion Mensaje="@mensajeAlerta" OnCerrar="() => mensajeAlerta = null" />
+
+<div class="row g-4">
+    <!-- Columna Izquierda: Formulario (Mobile-first: 12 cols en móvil, 4 en desktop) -->
+    <div class="col-12 col-lg-4">
+        <TareaForm OnTareaCreada="AgregarTarea" />
+    </div>
+
+    <!-- Columna Derecha: Lista de Tareas (12 cols en móvil, 8 en desktop) -->
+    <section class="col-12 col-lg-8" aria-label="Lista de tareas">
+        <FiltroTareas @bind-FiltroEstado="filtroEstado"
+                      @bind-FiltroPrioridad="filtroPrioridad" />
+
+        @if (!TareasFiltradas.Any())
+        {
+            <div class="alert alert-light border text-center py-4">
+                No hay tareas que coincidan con el filtro actual.
+            </div>
+        }
+        else
+        {
+            <div class="row row-cols-1 row-cols-md-2 g-3">
+                @foreach (var tarea in TareasFiltradas)
+                {
+                    <div class="col">
+                        <TareaCard Tarea="tarea"
+                                   OnAlternarEstado="CambiarEstadoTarea"
+                                   OnVerDetalle="IrADetalle"
+                                   OnCopiarTexto="CopiarAlPortapapeles"
+                                   OnSolicitarEliminar="AbrirModalEliminar" />
+                    </div>
+                }
+            </div>
+        }
+    </section>
+</div>
+
+<ConfirmarModal Visible="@(tareaAEliminar is not null)"
+                TituloTarea="@(tareaAEliminar?.Titulo ?? "")"
+                OnConfirmar="ConfirmarEliminacion"
+                OnCancelar="() => tareaAEliminar = null" />
+
+@code {
+    private IReadOnlyList<TareaItem> todasLasTareas = Array.Empty<TareaItem>();
+    private string filtroEstado = "Todas";
+    private string filtroPrioridad = "Todas";
+    private string? mensajeAlerta;
+    private TareaItem? tareaAEliminar;
+
+    private IEnumerable<TareaItem> TareasFiltradas => todasLasTareas
+        .Where(t => filtroEstado == "Todas" ||
+                   (filtroEstado == "Pendientes" && !t.Completada) ||
+                   (filtroEstado == "Completadas" && t.Completada))
+        .Where(t => filtroPrioridad == "Todas" || t.Prioridad == filtroPrioridad);
+
+    protected override void OnInitialized()
+    {
+        CargarDatos();
+        // Suscripción reactiva al State Service
+        TareaService.OnChange += ActualizarVista;
+    }
+
+    private void ActualizarVista()
+    {
+        CargarDatos();
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void CargarDatos() => todasLasTareas = TareaService.ObtenerTodas();
+
+    private void AgregarTarea(TareaItem nueva)
+    {
+        TareaService.AgregarTarea(nueva);
+        mensajeAlerta = $"Tarea '{nueva.Titulo}' creada correctamente.";
+    }
+
+    private void CambiarEstadoTarea(int id) => TareaService.AlternarEstado(id);
+
+    // Navegación programática hacia ruta con parámetro
+    private void IrADetalle(int id) => Nav.NavigateTo($"/tarea/{id}");
+
+    // JS INTEROP: Usa la API nativa del navegador navigator.clipboard
+    private async Task CopiarAlPortapapeles(TareaItem tarea)
+    {
+        var texto = $"Tarea: {tarea.Titulo} | Prioridad: {tarea.Prioridad} | Vence: {tarea.FechaLimite:dd/MM/yyyy}";
+        await JS.InvokeVoidAsync("navigator.clipboard.writeText", texto);
+        mensajeAlerta = "Resumen copiado al portapapeles mediante JS Interop.";
+    }
+
+    private void AbrirModalEliminar(TareaItem tarea) => tareaAEliminar = tarea;
+
+    private void ConfirmarEliminacion()
+    {
+        if (tareaAEliminar is not null)
+        {
+            TareaService.EliminarTarea(tareaAEliminar.Id);
+            mensajeAlerta = $"Tarea '{tareaAEliminar.Titulo}' eliminada.";
+            tareaAEliminar = null;
+        }
+    }
+
+    public void Dispose()
+    {
+        // Desuscribirse para evitar fugas de memoria
+        TareaService.OnChange -= ActualizarVista;
+    }
+}

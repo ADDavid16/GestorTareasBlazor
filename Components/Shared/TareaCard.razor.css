@@ -1,0 +1,13 @@
+.tarea-card {
+    transition: transform 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+    .tarea-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 .5rem 1rem rgba(0,0,0,.12) !important;
+    }
+
+    .tarea-card.completada {
+        background-color: #f8f9fa;
+        opacity: 0.85;
+    }

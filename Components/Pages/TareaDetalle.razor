@@ -1,0 +1,69 @@
+@page "/tarea/{Id:int}"
+@using GestorTareasBlazor.Models
+@using GestorTareasBlazor.Services
+@inject TareaStateService TareaService
+@inject NavigationManager Nav
+
+<PageTitle>Detalle de Tarea</PageTitle>
+
+<section class="card shadow-sm mx-auto" style="max-width: 650px;">
+    @if (tarea is null)
+    {
+        <div class="card-body text-center py-5">
+            <h2 class="h4 text-danger">Tarea no encontrada</h2>
+            <p class="text-muted">El ID #@Id no existe o fue eliminado.</p>
+            <button class="btn btn-primary" @onclick="Volver">Volver al tablero</button>
+        </div>
+    }
+    else
+    {
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+            <span>Tarea #@tarea.Id</span>
+            <span class="badge bg-light text-dark">@tarea.Prioridad</span>
+        </div>
+        <div class="card-body">
+            <h1 class="h3 fw-bold mb-3">@tarea.Titulo</h1>
+            <p class="lead fs-6">@tarea.Descripcion</p>
+
+            <ul class="list-group list-group-flush my-3">
+                <li class="list-group-item d-flex justify-content-between">
+                    <strong>Estado:</strong>
+                    <span>@(tarea.Completada ? "Completada ✅" : "Pendiente ⏳")</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                    <strong>Fecha límite:</strong>
+                    <span>@tarea.FechaLimite.ToString("dd/MM/yyyy")</span>
+                </li>
+            </ul>
+
+            <div class="d-flex gap-2 mt-4">
+                <button class="btn btn-secondary" @onclick="Volver">← Volver</button>
+                <button class="btn @(tarea.Completada ? "btn-warning" : "btn-success")" @onclick="Alternar">
+                    @(tarea.Completada ? "Marcar como Pendiente" : "Marcar como Completada")
+                </button>
+            </div>
+        </div>
+    }
+</section>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private TareaItem? tarea;
+
+    protected override void OnParametersSet()
+    {
+        tarea = TareaService.ObtenerPorId(Id);
+    }
+
+    private void Alternar()
+    {
+        if (tarea is not null)
+        {
+            TareaService.AlternarEstado(tarea.Id);
+        }
+    }
+
+    // Navegación programática
+    private void Volver() => Nav.NavigateTo("/");
+}

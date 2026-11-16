@@ -1,0 +1,55 @@
+@using GestorTareasBlazor.Models
+
+<aside class="form-container p-3 p-md-4 rounded-3 shadow-sm bg-white border">
+    <h2 class="h5 mb-3 fw-bold text-primary">Nueva Tarea</h2>
+
+    <EditForm Model="@modelo" OnValidSubmit="ProcesarFormulario" FormName="CrearTareaForm">
+        <DataAnnotationsValidator />
+
+        <div class="mb-3">
+            <label class="form-label fw-semibold">Título</label>
+            <InputText @bind-Value="modelo.Titulo" class="form-control" placeholder="Ej: Estudiar Componentes" />
+            <ValidationMessage For="@(() => modelo.Titulo)" class="text-danger small" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label fw-semibold">Descripción</label>
+            <InputTextArea @bind-Value="modelo.Descripcion" class="form-control" rows="2" placeholder="Detalles de la tarea..." />
+            <ValidationMessage For="@(() => modelo.Descripcion)" class="text-danger small" />
+        </div>
+
+        <div class="row g-2 mb-3">
+            <div class="col-12 col-sm-6">
+                <label class="form-label fw-semibold">Prioridad</label>
+                <InputSelect @bind-Value="modelo.Prioridad" class="form-select">
+                    <option value="Baja">Baja</option>
+                    <option value="Media">Media</option>
+                    <option value="Alta">Alta</option>
+                </InputSelect>
+                <ValidationMessage For="@(() => modelo.Prioridad)" class="text-danger small" />
+            </div>
+
+            <div class="col-12 col-sm-6">
+                <label class="form-label fw-semibold">Fecha Límite</label>
+                <InputDate @bind-Value="modelo.FechaLimite" class="form-control" />
+                <ValidationMessage For="@(() => modelo.FechaLimite)" class="text-danger small" />
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100 fw-semibold">
+            + Agregar Tarea
+        </button>
+    </EditForm>
+</aside>
+
+@code {
+    [Parameter] public EventCallback<TareaItem> OnTareaCreada { get; set; }
+
+    private TareaItem modelo = new();
+
+    private async Task ProcesarFormulario()
+    {
+        await OnTareaCreada.InvokeAsync(modelo);
+        modelo = new TareaItem(); // Reiniciar formulario
+    }
+}

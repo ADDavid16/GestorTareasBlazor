@@ -1,0 +1,14 @@
+@if (!string.IsNullOrWhiteSpace(Mensaje))
+{
+    <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+        <strong>Listo:</strong> @Mensaje
+        <button type="button" class="btn-close" @onclick="Cerrar"></button>
+    </div>
+}
+
+@code {
+    [Parameter] public string? Mensaje { get; set; }
+    [Parameter] public EventCallback OnCerrar { get; set; }
+
+    private Task Cerrar() => OnCerrar.InvokeAsync();
+}
